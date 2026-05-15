@@ -10,6 +10,7 @@ public class DataSourcePostProcessor  implements BeanPostProcessor {
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (bean instanceof DataSource) {
+            System.out.println("DEBUG: Wrapping DataSource bean: " + beanName);
             return DataSourceProxy.wrap((DataSource) bean);
         }
         return bean;
