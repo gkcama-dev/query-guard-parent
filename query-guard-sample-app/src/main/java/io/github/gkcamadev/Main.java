@@ -1,17 +1,54 @@
 package io.github.gkcamadev;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.context.annotation.Bean;
+
+@SpringBootApplication
 public class Main {
     public static void main(String[] args) {
-        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
-        // to see how IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
-
-        for (int i = 1; i <= 5; i++) {
-            //TIP Press <shortcut actionId="Debug"/> to start debugging your code. We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/> breakpoint
-            // for you, but you can always add more by pressing <shortcut actionId="ToggleLineBreakpoint"/>.
-            System.out.println("i = " + i);
-        }
+        SpringApplication.run(Main.class, args);
     }
+        @Bean
+        public CommandLineRunner run (JdbcTemplate jdbcTemplate){
+            return args -> {
+                System.out.println("🚀 [SampleApp] Starting database operations...\n");
+
+                System.out.println("✅ [SampleApp] Creating table and inserting initial data...");
+                jdbcTemplate.execute("CREATE TABLE students (id INT, name VARCHAR(255))");
+                jdbcTemplate.execute("INSERT INTO students VALUES (1, 'Kamal')");
+                jdbcTemplate.execute("INSERT INTO students VALUES (2, 'Nimal')");
+                jdbcTemplate.execute("INSERT INTO students VALUES (3, 'Sunil')");
+
+                System.out.println("\n✅ [SampleApp] Executing safe query (Specific columns)...");
+                jdbcTemplate.queryForList("SELECT name FROM students WHERE id = 1");
+
+                System.out.println("\n⚠️ [SampleApp] Executing bad practice query (SELECT *)...");
+                jdbcTemplate.queryForList("SELECT * FROM students");
+
+                System.out.println("\n✅ [SampleApp] Executing safe DELETE (With WHERE clause)...");
+                jdbcTemplate.execute("DELETE FROM students WHERE id = 3");
+
+                System.out.println("\n💀 [SampleApp] Executing malicious DELETE query (No WHERE clause)...");
+                try {
+                    jdbcTemplate.execute("DELETE FROM students");
+                    System.out.println("❌ [SampleApp] Oops! The query ran successfully. QueryGuard failed!");
+                } catch (Exception e) {
+                    System.out.println("🛡️ [SampleApp] SUCCESS! Query was blocked by QueryGuard: " + e.getMessage());
+                }
+
+                System.out.println("\n☢️ [SampleApp] Executing catastrophic DROP TABLE query...");
+                try {
+                    jdbcTemplate.execute("DROP TABLE students");
+                    System.out.println("❌ [SampleApp] Oops! Table dropped. QueryGuard failed!");
+                } catch (Exception e) {
+                    System.out.println("🛡️ [SampleApp] SUCCESS! Query was blocked by QueryGuard: " + e.getMessage());
+                }
+
+                System.out.println("\n🎉 [SampleApp] All database operations completed. Database is still safe!");
+
+            };
+        }
 }

@@ -38,6 +38,7 @@
             <artifactId>byte-buddy</artifactId>
             <version>1.14.10</version>
         </dependency>
+
     </dependencies>
 
 </project>
