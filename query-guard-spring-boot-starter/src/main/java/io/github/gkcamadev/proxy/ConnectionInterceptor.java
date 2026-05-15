@@ -1,9 +1,12 @@
 package io.github.gkcamadev.proxy;
 
+import net.bytebuddy.implementation.bind.annotation.AllArguments;
+import net.bytebuddy.implementation.bind.annotation.Origin;
 import net.bytebuddy.implementation.bind.annotation.RuntimeType;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.lang.reflect.Method;
 
 public class ConnectionInterceptor {
 
@@ -14,9 +17,14 @@ public class ConnectionInterceptor {
     }
 
     @RuntimeType
-    public Connection intercept() throws Exception {
-        Connection realConnection = realDataSource.getConnection();
-        System.out.println("🔌 [QueryGuard] Connection established and wrapped.");
+    public Connection intercept(@Origin Method method,@AllArguments Object[] args) throws Exception {
+
+        System.out.println(" [QueryGuard] Intercepted: " + method.getName());
+
+        // Call original method (getConnection)
+        Connection realConnection = (Connection) method.invoke(realDataSource, args);
+
+        // Wrap the connection
         return ConnectionProxy.wrap(realConnection);
     }
 }
