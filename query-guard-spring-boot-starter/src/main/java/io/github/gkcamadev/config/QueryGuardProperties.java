@@ -6,7 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class QueryGuardProperties {
 
     private boolean enabled = true;// On-Off Lib ?
-    private boolean blackDrop = true;// DROP TABLE block ?
+    private boolean blockDrop = true;// DROP TABLE block ?
     private boolean blockMassDelete = true;// No WHERE DELETE block ?
 
     public boolean isEnabled() {
@@ -17,12 +17,12 @@ public class QueryGuardProperties {
         this.enabled = enabled;
     }
 
-    public boolean isBlackDrop() {
-        return blackDrop;
+    public boolean isBlockDrop() {
+        return blockDrop;
     }
 
-    public void setBlackDrop(boolean blackDrop) {
-        this.blackDrop = blackDrop;
+    public void setBlockDrop(boolean blockDrop) {
+        this.blockDrop = blockDrop;
     }
 
     public boolean isBlockMassDelete() {
