@@ -12,10 +12,11 @@ import java.lang.reflect.Method;
 public class StatementInterceptor {
 
     private final Connection realConnection;
-    private final QueryInspector inspector = new QueryInspector();
+    private final QueryInspector inspector;
 
-    public StatementInterceptor(Connection realConnection) {
+    public StatementInterceptor(Connection realConnection, QueryInspector inspector) {
         this.realConnection = realConnection;
+        this.inspector = inspector;
     }
 
     @RuntimeType
@@ -32,7 +33,7 @@ public class StatementInterceptor {
 
         // If the result is a Statement, wrap it to catch execute(sql) later
         if (result instanceof Statement) {
-            return StatementProxy.wrap((Statement) result);
+            return StatementProxy.wrap((Statement) result, inspector);
         }
 
         return result;

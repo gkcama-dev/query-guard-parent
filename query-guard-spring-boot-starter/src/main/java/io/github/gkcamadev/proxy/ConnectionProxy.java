@@ -1,5 +1,6 @@
 package io.github.gkcamadev.proxy;
 
+import io.github.gkcamadev.core.QueryInspector;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
@@ -11,13 +12,13 @@ import java.lang.reflect.Method;
 
 public class ConnectionProxy {
 
-    public static Connection wrap(Connection realConnection) {
+    public static Connection wrap(Connection realConnection, QueryInspector inspector) {
         try {
             return new ByteBuddy()
                     .subclass(Connection.class)
                     // Intercept query methods (prepareStatement, createStatement, prepareCall)
                     .method(ElementMatchers.nameStartsWith("prepare").or(ElementMatchers.nameStartsWith("create")))
-                    .intercept(MethodDelegation.to(new StatementInterceptor(realConnection)))
+                    .intercept(MethodDelegation.to(new StatementInterceptor(realConnection, inspector)))
                     // Forward ALL OTHER methods directly to the real connection using InvocationHandler
                     .method(ElementMatchers.any().and(ElementMatchers.not(ElementMatchers.nameStartsWith("prepare").or(ElementMatchers.nameStartsWith("create")))))
                     .intercept(InvocationHandlerAdapter.of(new InvocationHandler() {

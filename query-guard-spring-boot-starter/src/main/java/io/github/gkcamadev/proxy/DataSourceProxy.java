@@ -1,26 +1,40 @@
 package io.github.gkcamadev.proxy;
 
+import io.github.gkcamadev.core.QueryInspector;
 import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
-import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.InvocationHandlerAdapter;
 import net.bytebuddy.matcher.ElementMatchers;
 
 import javax.sql.DataSource;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.sql.Connection;
 
 public class DataSourceProxy {
 
-    public static DataSource wrap(DataSource realDataSource) {
+    public static DataSource wrap(DataSource realDataSource, QueryInspector inspector) {
         try {
             return new ByteBuddy()
                     .subclass(DataSource.class)
-                    // Match all methods EXCEPT basic Object methods (e.g., equals, hashCode, toString)
-                    .method(ElementMatchers.any().and(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class))))
-                    .intercept(MethodDelegation.to(realDataSource))
-                    // Intercept ONLY getConnection methods
-                    .method(ElementMatchers.named("getConnection"))
-                    .intercept(MethodDelegation.to(new ConnectionInterceptor(realDataSource)))
+                    .method(ElementMatchers.any())
+                    .intercept(InvocationHandlerAdapter.of(new InvocationHandler() {
+                        @Override
+                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                            if (method.getName().equals("getConnection")) {
+                                System.out.println(" [QueryGuard] Intercepted: getConnection");
+                                Connection realConnection = (Connection) method.invoke(realDataSource, args);
+                                // ConnectionProxy එකට Inspector එක පාස් කරනවා!
+                                return ConnectionProxy.wrap(realConnection, inspector);
+                            }
+                            try {
+                                return method.invoke(realDataSource, args);
+                            } catch (InvocationTargetException e) {
+                                throw e.getCause();
+                            }
+                        }
+                    }))
                     .make()
-                    // Safe class loading
                     .load(DataSourceProxy.class.getClassLoader())
                     .getLoaded()
                     .getDeclaredConstructor()
