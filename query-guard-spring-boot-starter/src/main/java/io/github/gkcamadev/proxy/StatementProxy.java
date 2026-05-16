@@ -12,14 +12,13 @@ import java.sql.Statement;
 
 public class StatementProxy {
 
-    public static Statement wrap(Statement realStatement) {
+    public static Statement wrap(Statement realStatement, QueryInspector inspector) {
         try {
             return new ByteBuddy()
                     .subclass(Statement.class)
                     // Match all methods EXCEPT basic Object methods
                     .method(ElementMatchers.any().and(ElementMatchers.not(ElementMatchers.isDeclaredBy(Object.class))))
                     .intercept(InvocationHandlerAdapter.of(new InvocationHandler() {
-                        private final QueryInspector inspector = new QueryInspector();
 
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
