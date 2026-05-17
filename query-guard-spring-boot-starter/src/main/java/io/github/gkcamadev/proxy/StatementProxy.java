@@ -23,15 +23,28 @@ public class StatementProxy {
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 
-                            // Check if method is executed, executeQuery, or executeUpdate AND has SQL string
-                            if (method.getName().startsWith("execute") && args != null && args.length > 0 && args[0] instanceof String) {
-                                String sql = (String) args[0];
+                            boolean isExecute = method.getName().startsWith("execute");
+                            String sql = (args != null && args.length > 0 && args[0] instanceof String) ? (String) args[0] : null;
+
+                            if (isExecute && sql != null) {
                                 inspector.inspect(sql);
                             }
 
+                            long startTime = System.nanoTime();
+
                             try {
-                                // Call the real method
-                                return method.invoke(realStatement, args);
+                                // Original Query -> Database
+                                Object result = method.invoke(realStatement, args);
+
+                                // Query Execution Time Calculate
+                                if (isExecute && sql != null) {
+                                    long endTime = System.nanoTime();
+                                    double executionTimeMs = (endTime - startTime) / 1_000_000.0;
+                                    System.out.printf("   ⏱️ [QueryGuard] Execution Time: %.3f ms for -> [%s]%n", executionTimeMs, sql);
+                                }
+
+                                return result;
+
                             } catch (InvocationTargetException e) {
                                 throw e.getCause();
                             }
