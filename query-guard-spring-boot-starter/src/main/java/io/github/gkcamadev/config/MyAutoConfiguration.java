@@ -16,7 +16,7 @@ public class MyAutoConfiguration {
     }
 
     @Bean
-    public DataSourcePostProcessor dataSourcePostProcessor(QueryInspector inspector) {
+    public static DataSourcePostProcessor dataSourcePostProcessor(QueryInspector inspector) {
         return new DataSourcePostProcessor(inspector);
     }
 
